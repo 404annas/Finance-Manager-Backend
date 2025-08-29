@@ -1,0 +1,24 @@
+{
+  "name": "finance-manager-backend",
+  "version": "1.0.0",
+  "description": "Finance Manager Backend",
+  "keywords": [
+    "Finance"
+  ],
+  "license": "ISC",
+  "author": "Annas",
+  "type": "commonjs",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "helmet": "^8.1.0",
+    "json-web-token": "^3.2.0",
+    "mongoose": "^8.18.0"
+  }
+}
