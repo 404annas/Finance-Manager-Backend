@@ -24,7 +24,7 @@ const app = express();
 connectDB();
 
 app.use(cors({
-    origin: ["http://localhost:5173", "http://localhost:5174"],
+    origin: ["http://localhost:5173", "http://localhost:5174", "https://finance-manage-kappa.vercel.app"],
     credentials: true,
 }));
 

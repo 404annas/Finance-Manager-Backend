@@ -4,7 +4,7 @@ The powerful and secure backend service for the FINANCE-APP, built with Node.js 
 
 ## ✨ About the Project
 
-This repository contains the backend codebase for the FINANCE-APP, a robust server-side application built on Node.js and Express. It serves as the central API and business logic layer for the entire financial management platform. The backend is responsible for handling all core functionalities, including user authentication, data processing, database interactions, and secure communication with the frontend client.
+This repository contains the backend codebase for the FINANCE-APP, a robust server-side application built on Node.js and Express. It serves as the central API and business logic layer for the entire financial management platform. The backend is responsible for handling all core functionalities, including user authentication, data importing, database interactions, and secure communication with the frontend client.
 
 The architecture is designed following the MVC (Model-View-Controller) pattern, ensuring a clean separation of concerns and making the application scalable and maintainable. It handles everything from defining the database schemas (`models`) and managing the application's business logic (`controllers`) to exposing secure API endpoints (`routes`). The backend also integrates with external services for tasks like sending emails (`mailer.js`), scheduling reminders (`cron.js`), and managing file uploads (`multer.js`, `cloudinary.js`), providing a full-featured and reliable foundation for the FINANCE-APP.
 
@@ -12,7 +12,7 @@ The architecture is designed following the MVC (Model-View-Controller) pattern, 
 
 *   **🔐 Secure Authentication:** Implements JWT-based authentication to protect routes and user data (`authMiddleware.js`).
 *   **👤 Complete User Management:** Full CRUD (Create, Read, Update, Delete) operations for users (`userController.js`, `deleteUsers.js`).
-*   **💳 Transaction & Payment Processing:** Logic for handling, scheduling, and recording payments and transactions (`transactionController.js`, `schedulePayment.js`).
+*   **💳 Transaction & Payment importing:** Logic for handling, scheduling, and recording payments and transactions (`transactionController.js`, `schedulePayment.js`).
 *   **📧 Automated Email Services:** Integrated mailer for sending reminders and user invitations (`reminderMailer.js`, `inviteUser.js`).
 *   **🕒 Scheduled Tasks:** Utilizes cron jobs for automated tasks like sending payment reminders (`cron.js`).
 *   **🖼️ Cloud-Based Image Uploads:** Manages file uploads by integrating with Cloudinary for efficient storage (`cloudinary.js`, `multer.js`).
