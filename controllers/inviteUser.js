@@ -1,36 +1,42 @@
 import Invite from "../models/inviteModel.js";
 import User from "../models/userModel.js";
 import jwt from "jsonwebtoken";
-import { sendInviteEmail } from "../config/mailer.js"; // This function will now expect (to, fullInviteLink)
+import { sendInviteEmail } from "../config/mailer.js";
 
 export const inviteUser = async (req, res) => {
     try {
-        const { email } = req.body;
-        // 1. Check if already registered
-        const existingUser = await User.findOne({ email });
-        if (existingUser) {
-            return res.status(400).json({ message: "User already exists" });
+        const { emails } = req.body; // 👈 ab array aayegi
+
+        if (!emails || !Array.isArray(emails) || emails.length === 0) {
+            return res.status(400).json({ message: "Emails are required" });
         }
 
-        // 2. Generate RAW JWT Token
-        const rawJwtToken = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: "7d" });
-        console.log("Generated RAW JWT Token (in inviteUser):", rawJwtToken);
+        const results = [];
 
-        // 3. Save invite (store the RAW JWT token in the database)
-        await Invite.create({
-            email,
-            token: rawJwtToken, // Store the raw JWT string here
-        });
-        console.log("Invite created in DB with invitedBy:", req.user?._id || "null (no admin ID)");
+        for (const email of emails) {
+            const existingUser = await User.findOne({ email });
+            if (existingUser) {
+                results.push({ email, status: "❌ Already registered" });
+                continue;
+            }
 
-        // 4. Construct the FULL invite URL
-        const fullInviteLink = `http://localhost:5174/register?token=${rawJwtToken}`;
-        console.log("Full invite link to be sent (in inviteUser):", fullInviteLink);
+            const rawJwtToken = jwt.sign({ email }, process.env.JWT_SECRET, {
+                expiresIn: "7d",
+            });
 
-        // 5. Send email - Pass the FULL invite URL to the mailer function
-        await sendInviteEmail(email, fullInviteLink); // <--- PASS THE FULL URL HERE
+            await Invite.create({
+                invitedBy: req.user._id,
+                email,
+                token: rawJwtToken,
+            });
 
-        res.json({ message: "✅ Invite sent successfully!" });
+            const fullInviteLink = `http://localhost:5174/register?token=${rawJwtToken}`;
+            await sendInviteEmail(email, fullInviteLink);
+
+            results.push({ email, status: "✅ Invite sent" });
+        }
+
+        res.json({ message: "Process completed", results });
     } catch (error) {
         console.error("❌ Invite error:", error);
         res.status(500).json({ message: "Something went wrong" });

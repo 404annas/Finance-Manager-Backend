@@ -6,7 +6,6 @@ import cookieParser from "cookie-parser";
 import connectDB from "./config/db.js";
 import userRoutes from "./routes/userRoutes.js";
 import userDashboardRoutes from "./routes/userDashboardRoutes.js";
-import adminDashboardRoutes from "./routes/adminDashboardRoutes.js";
 import inviteRoute from "./routes/inviteRoutes.js";
 import getUsersRoute from "./routes/getUsersRoute.js";
 import deleteUserRoute from "./routes/deleteUserRoute.js";
@@ -39,7 +38,6 @@ app.get("/", (req, res) => {
 
 app.use("/api", userRoutes);
 app.use("/api", userDashboardRoutes);
-app.use("/api", adminDashboardRoutes);
 app.use("/api", inviteRoute);
 app.use("/api", getUsersRoute);
 app.use("/api", deleteUserRoute)

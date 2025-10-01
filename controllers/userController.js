@@ -6,8 +6,7 @@ import nodemailer from "nodemailer";
 
 export const registerUser = async (req, res) => {
     try {
-        const { name, email, password, role, token } = req.body; // 'token' will now be present if sent from client
-        console.log("Token received in registerUser backend:", token);
+        const { name, email, password, token: inviteToken } = req.body;
 
         const existingUser = await User.findOne({ email });
         if (existingUser) {
@@ -17,27 +16,24 @@ export const registerUser = async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
         const profileImage = req.file ? req.file.path : null;
 
-        let status = "pending"; // Default status
+        let status = "pending";
+        let invitedById = null; // <-- FIX: Prepare a variable to hold the inviter's ID.
 
-        if (token) {
-            // Verify the token to ensure it's valid and matches the email
+        if (inviteToken) {
             let decodedToken;
             try {
-                decodedToken = jwt.verify(token, process.env.JWT_SECRET);
-                console.log("Decoded Token:", decodedToken);
+                decodedToken = jwt.verify(inviteToken, process.env.JWT_SECRET);
                 if (decodedToken.email !== email) {
                     return res.status(400).json({ message: "Invalid invite token for this email." });
                 }
             } catch (jwtError) {
-                console.error("JWT Verification Error:", jwtError);
                 return res.status(400).json({ message: "Invalid or expired invite token." });
             }
 
-            const invite = await Invite.findOne({ token, email }); // Find the invite by token and email
+            const invite = await Invite.findOne({ token: inviteToken, email });
             if (invite) {
-                status = "accepted"; // Update status to accepted
-            } else {
-                console.warn(`Invite not found for email: ${email} with token: ${token}`);
+                status = "accepted";
+                invitedById = invite.invitedBy; // <-- FIX: Get the ID from the invite document.
             }
         }
 
@@ -45,12 +41,12 @@ export const registerUser = async (req, res) => {
             name,
             email,
             password: hashedPassword,
-            role: role || "user", // Default role to 'user' if not specified
             profileImage,
-            status, // Set the status based on invite acceptance
+            status,
+            invitedBy: invitedById, // <-- FIX: Save the inviter's ID when creating the new user.
         });
 
-        // ✅ Send welcome email after successful registration
+        // ... (Send welcome email code remains the same)
         const transporter = nodemailer.createTransport({
             host: process.env.SMTP_HOST,
             port: process.env.SMTP_PORT,
@@ -71,9 +67,27 @@ export const registerUser = async (req, res) => {
                    <p>Best regards,<br/>Finance Dashboard Team</p>`,
         });
 
-        res.status(201).json({ message: "User registered successfully", user });
+        // This declaration is now valid because 'token' hasn't been used before in this scope
+        const authToken = jwt.sign(
+            { id: user._id, email: user.email },
+            process.env.JWT_SECRET,
+            { expiresIn: "7d" }
+        );
+
+        res.status(201).json({
+            message: "User registered successfully",
+            token: authToken,
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                profileImage: user.profileImage || null,
+                status: user.status
+            },
+        });
+
     } catch (error) {
-        console.error("Error registering user:", error); // Use console.error for errors
+        console.error("Error registering user:", error);
         res.status(500).json({ message: "Error registering user", error: error.message });
     }
 };
@@ -83,57 +97,44 @@ export const loginUser = async (req, res) => {
         const { email, password } = req.body;
 
         const user = await User.findOne({ email });
-        if (!user) {
-            return (res.status(400).json({ message: "Invalid Email or Password" }))
-        }
-        console.log(user);
+        if (!user) return res.status(400).json({ message: "Invalid Email or Password" });
 
         const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-            return (res.status(400).json({ message: "Invalid Email or Password" }))
-        }
-        console.log(isMatch);
+        if (!isMatch) return res.status(400).json({ message: "Invalid Email or Password" });
 
         const token = jwt.sign(
-            { id: user._id, role: user.role },
+            { id: user._id, email: user.email }, // id aur email dono include
             process.env.JWT_SECRET,
-            { expiresIn: "1d" }
+            { expiresIn: "7d" }
         );
-        console.log(token)
 
         res.status(200).json({
-            message: "Login successfull",
+            message: "Login successful",
             token,
-            user: { id: user._id, name: user.name, email: user.email, role: user.role, profileImage: user.profileImage || null, },
-        })
-        console.log(user);
-
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                profileImage: user.profileImage || null,
+                status: user.status
+            },
+        });
     } catch (error) {
         res.status(500).json({ message: "Error logging in", error: error.message });
-        console.log(error.message);
     }
-}
+};
 
 export const logoutUser = async (req, res) => {
     try {
         res.status(200).json({ message: "Logout successful" });
-        console.log("Logged Out")
     } catch (error) {
         res.status(500).json({ message: "Error logging out", error: error.message });
-        console.log(error.message)
     }
-}
+};
 
 export const getUserDashboard = (req, res) => {
     res.json({
-        message: "Welcome to User Dashboard",
+        message: "Welcome to Dashboard",
         user: req.user,
-    });
-};
-
-export const getAdminDashboard = (req, res) => {
-    res.json({
-        message: "Welcome to Admin Dashboard",
-        admin: req.user,
     });
 };
