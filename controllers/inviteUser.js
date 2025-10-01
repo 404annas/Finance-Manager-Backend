@@ -30,7 +30,7 @@ export const inviteUser = async (req, res) => {
                 token: rawJwtToken,
             });
 
-            const fullInviteLink = `http://localhost:5174/register?token=${rawJwtToken}`;
+            const fullInviteLink = `https://finance-manage-kappa.vercel.app/register?token=${rawJwtToken}`;
             await sendInviteEmail(email, fullInviteLink);
 
             results.push({ email, status: "✅ Invite sent" });

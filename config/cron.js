@@ -13,14 +13,14 @@ const transporter = nodemailer.createTransport({
 // Schedule a task to run every minute
 cron.schedule("* * * * *", async () => {
     const now = new Date();
-    console.log("Cron running at", new Date().toLocaleString());
+    // console.log("Cron running at", new Date().toLocaleString());
 
     try {
         const payments = await SchedulePayment.find({
             status: "pending",
             scheduledDate: { $lte: now },
         });
-        console.log("Pending payments:", payments);
+        // console.log("Pending payments:", payments);
 
         for (let payment of payments) {
             await transporter.sendMail({
