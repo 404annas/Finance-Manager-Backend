@@ -1,23 +1,23 @@
 import nodemailer from "nodemailer";
 
 const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-    },
+  service: "gmail",
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS
+  },
 });
 
 export const sendInviteEmail = async (to, inviteLink) => { // This function now expects the full URL
-    try {
-        console.log("📧 Preparing invite for:", to);
-        console.log("Full invite URL received by mailer:", inviteLink);
+  try {
+    console.log("📧 Preparing invite for:", to);
+    console.log("Full invite URL received by mailer:", inviteLink);
 
-        const mailOptions = {
-            from: process.env.FROM_EMAIL,
-            to,
-            subject: "You're invited to Finance Dashboard 🎉",
-            html: `
+    const mailOptions = {
+      from: process.env.FROM_EMAIL,
+      to,
+      subject: "You're invited to Finance Dashboard 🎉",
+      html: `
 <!DOCTYPE html>
 <html>
   <head>
@@ -62,12 +62,56 @@ export const sendInviteEmail = async (to, inviteLink) => { // This function now 
 </html>
 `
 
-        };
+    };
 
-        const info = await transporter.sendMail(mailOptions);
-        console.log("✅ Email sent successfully:", info.response);
-    } catch (error) {
-        console.error("❌ Error sending email:", error.message);
-        throw error;
-    }
+    const info = await transporter.sendMail(mailOptions);
+    console.log("✅ Email sent successfully:", info.response);
+  } catch (error) {
+    console.error("❌ Error sending email:", error.message);
+    throw error;
+  }
+};
+
+export const sendShareNotificationEmail = async (recipientEmail, sharerName, shareTitle, shareCategory) => {
+  try {
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: process.env.SMTP_PORT,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
+
+    await transporter.sendMail({
+      from: process.env.FROM_EMAIL,
+      to: recipientEmail,
+      subject: `💰 Payment Shared: You've been added to "${shareTitle}"`,
+      html: `
+  <div style="font-family: Rockwell, sans-serif; background-color: #f9fafc; padding: 20px; border-radius: 10px; max-width: 600px; margin: auto; color: #333;">
+    <h2 style="color: #6667DD; margin-bottom: 10px;">Hello,</h2>
+    <p style="font-size: 16px; line-height: 1.5;">
+      <b style="color: #111;">${sharerName}</b> has shared a payment with you on the <b>Finance Dashboard</b>.
+    </p>
+
+    <div style="background-color: #fff; padding: 15px; border-radius: 8px; margin: 15px 0; box-shadow: 0 2px 6px rgba(0,0,0,0.05);">
+      <p style="margin: 0; font-weight: bold; color: #6667DD;">Payment Details:</p>
+      <p style="margin: 5px 0;"><b>Title:</b> ${shareTitle}</p>
+      <p style="margin: 5px 0;"><b>Category:</b> ${shareCategory}</p>
+    </div>
+
+    <p style="font-size: 14px; color: #555;">You can log in to your Dashboard to see more details.</p>
+    
+    <p style="margin-top: 20px; font-size: 14px; color: #555;">
+      Best regards,<br/>
+      <b style="color: #6667DD;">The Finance Dashboard Team</b>
+    </p>
+  </div>
+`,
+    });
+
+    console.log(`Share notification sent to ${recipientEmail}`);
+  } catch (error) {
+    console.error(`Error sending share notification to ${recipientEmail}:`, error);
+  }
 };

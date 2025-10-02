@@ -15,6 +15,8 @@ import schedulePaymentRoute from "./routes/schedulePaymentRoute.js";
 import "./config/cron.js";
 import contactRoute from "./routes/contactRoute.js";
 import transactionRoute from "./routes/transactionRoute.js";
+import shareRoute from "./routes/shareRoute.js";
+import paymentRoute from "./routes/paymentRoute.js";
 
 dotenv.config();
 
@@ -46,6 +48,8 @@ app.use("/api", paymentsDoneRoute);
 app.use("/api", schedulePaymentRoute);
 app.use("/api", contactRoute);
 app.use("/api", transactionRoute);
+app.use("/api", shareRoute);
+app.use("/api", paymentRoute);
 
 const PORT = process.env.PORT || 8080;
 
