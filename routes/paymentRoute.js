@@ -1,11 +1,12 @@
 import express from "express";
 import { authMiddleware } from "../middlewares/authMiddleware.js";
 import { addPayment, getPaymentsForShare, deletePayment } from "../controllers/paymentController.js";
+import upload from "../config/multer.js";
 
 const paymentRoute = express.Router()
 
 paymentRoute.route("/shares/:shareId/payments")
-    .post(authMiddleware, addPayment)
+    .post(authMiddleware, upload.single('image'), addPayment)
     .get(authMiddleware, getPaymentsForShare);
 
 paymentRoute.delete("/payments/:paymentId", authMiddleware, deletePayment);

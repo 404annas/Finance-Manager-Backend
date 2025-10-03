@@ -11,25 +11,38 @@ const isUserInShare = (share, userId) => {
 export const addPayment = async (req, res) => {
     try {
         const { shareId } = req.params;
-        const share = await Share.findById(shareId);
-        if (!share) return res.status(404).json({ message: "Share not found." });
+        const { title, category, currency, amount, status } = req.body;
+        const imageUrl = req.file ? req.file.path : null;
 
-        // Security: Ensure the user is part of this share before they can add to it
+        const share = await Share.findById(shareId);
+        if (!share) {
+            return res.status(404).json({ message: "Share not found." });
+        }
+
         if (!isUserInShare(share, req.user._id)) {
             return res.status(403).json({ message: "Not authorized to add payments to this share." });
         }
 
         const newPayment = await Payment.create({
-            ...req.body,
             shareId,
-            createdBy: req.user._id
+            createdBy: req.user._id,
+            title, category, currency, amount, status,
+            image: imageUrl,
         });
 
-        res.status(201).json({ message: "Payment added successfully", payment: newPayment });
+        // <-- THE FIX IS HERE ---
+        // After creating, find the new payment again and populate the 'createdBy' field
+        // so the response contains the full user object, not just the ID.
+        const populatedPayment = await Payment.findById(newPayment._id).populate("createdBy", "name _id");
+        // --- END OF FIX ---
+
+        res.status(201).json({ message: "Payment added successfully", payment: populatedPayment });
+
     } catch (error) {
-        res.status(500).json({ message: "Server error." });
+        console.error("Error adding payment:", error)
+        res.status(500).json({ message: "Server error while adding payment." });
     }
-}
+};
 
 export const getPaymentsForShare = async (req, res) => {
     try {
