@@ -15,9 +15,11 @@ const paymentSchema = new mongoose.Schema({
     category: { type: String, required: true },
     currency: { type: String, required: true },
     amount: { type: Number, required: true },
-    status: { type: String, required: true },
+    status: { type: String, required: true, enum: ["Paid", "Request", "Pending"] },
     image: { type: String, default: null },
 }, { timestamps: true });
+
+paymentSchema.index({ shareId: 1 });
 
 const Payment = new mongoose.model("Payment", paymentSchema);
 

@@ -5,13 +5,13 @@ const viewUsers = async (req, res) => {
         const loggedInUser = req.user;
 
         // Query 1: Find all users that the logged-in user has invited.
-        const invitedUsers = await User.find({ invitedBy: loggedInUser._id });
+        const invitedUsers = await User.find({ invitedBy: loggedInUser._id }).select("name email profileImage status");
 
         // Query 2: Find the single user who invited the logged-in user, if they exist.
         let invitedBy = null;
         if (loggedInUser.invitedBy) {
             // Find the inviter's full details.
-            invitedBy = await User.findById(loggedInUser.invitedBy);
+            invitedBy = await User.findById(loggedInUser.invitedBy).select("name email profileImage status");
         }
 
         // Return a structured object with both sets of data.

@@ -6,13 +6,15 @@ const transactionSchema = new mongoose.Schema({
         ref: "User",
         required: true,
     },
-    title: { type: String, required: true },
+    title: { type: String, required: true, trim: true },
     amount: { type: Number, required: true },
     category: { type: String, required: true },
     currency: { type: String, required: true },
     type: { type: String, enum: ["income", "expense"], required: true },
-    imageUrl: { type: String },
+    imageUrl: { type: String, default: null },
 }, { timestamps: true });
+
+transactionSchema.index({ userId: 1 });
 
 const Transaction = new mongoose.model("Transaction", transactionSchema);
 

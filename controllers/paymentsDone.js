@@ -16,7 +16,7 @@ export const addPaymentDone = async (req, res) => {
 
 export const getAllPaymentsDone = async (req, res) => {
     try {
-        const payments = await PaymentsDone.find({ userId: req.user._id }).sort({ createdAt: -1 });
+        const payments = await PaymentsDone.find({ userId: req.user._id }).sort({ createdAt: -1 }).lean();
         res.status(200).json({ payments });
     } catch (error) {
         res.status(500).json({ error: "Failed to fetch payments" });

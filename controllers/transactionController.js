@@ -30,7 +30,7 @@ export const createTransaction = async (req, res) => {
 // Get all transactions for current user
 export const getUserTransactions = async (req, res) => {
     try {
-        const transactions = await Transaction.find({ userId: req.user._id }).sort({ createdAt: -1 });
+        const transactions = await Transaction.find({ userId: req.user._id }).sort({ createdAt: -1 }).lean();
         res.status(200).json(transactions);
     } catch (error) {
         console.error(error);

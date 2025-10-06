@@ -14,7 +14,7 @@ export const inviteUser = async (req, res) => {
         const results = [];
 
         for (const email of emails) {
-            const existingUser = await User.findOne({ email });
+            const existingUser = await User.findOne({ email }).select("_id");;
             if (existingUser) {
                 results.push({ email, status: "❌ Already registered" });
                 continue;

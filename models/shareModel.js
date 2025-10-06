@@ -24,6 +24,9 @@ const shareSchema = new mongoose.Schema({
     }]
 }, { timestamps: true });
 
+shareSchema.index({ sharedBy: 1 });
+shareSchema.index({ sharedWith: 1 });
+
 const Share = new mongoose.model("Share", shareSchema);
 
 export default Share;

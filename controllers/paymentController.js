@@ -55,7 +55,7 @@ export const getPaymentsForShare = async (req, res) => {
             return res.status(403).json({ message: "Not authorized to view these payments." });
         }
 
-        const payments = await Payment.find({ shareId }).populate("createdBy", "name");
+        const payments = await Payment.find({ shareId }).populate("createdBy", "name _id").lean();
         res.status(200).json({ payments });
     } catch (error) {
         res.status(500).json({ message: "Server error." });

@@ -55,7 +55,8 @@ export const getMyShares = async (req, res) => {
         })
             .populate("sharedBy", "name email") // Get the creator's info
             .populate("sharedWith", "name email") // Get info of all people it's shared with
-            .sort({ createdAt: -1 });
+            .sort({ createdAt: -1 })
+            .lean();
 
         res.status(200).json({ shares });
 
