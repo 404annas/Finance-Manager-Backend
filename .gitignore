@@ -1,3 +1,11 @@
 .env
+
 node_modules
+
 finance-manager.code-workspace
+
+collection.json
+
+combined_project_code.txt
+
+code-to-txt.py
