@@ -1,5 +1,6 @@
 import Payment from "../models/paymentModel.js";
 import Share from "../models/shareModel.js";
+import Notification from "../models/notification.js";
 
 // Helper function for security check
 const isUserInShare = (share, userId) => {
@@ -13,6 +14,7 @@ export const addPayment = async (req, res) => {
         const { shareId } = req.params;
         const { title, category, currency, amount, status } = req.body;
         const imageUrl = req.file ? req.file.path : null;
+        const currentUser = req.user;
 
         const share = await Share.findById(shareId);
         if (!share) {
@@ -30,11 +32,38 @@ export const addPayment = async (req, res) => {
             image: imageUrl,
         });
 
-        // <-- THE FIX IS HERE ---
-        // After creating, find the new payment again and populate the 'createdBy' field
-        // so the response contains the full user object, not just the ID.
         const populatedPayment = await Payment.findById(newPayment._id).populate("createdBy", "name _id");
-        // --- END OF FIX ---
+
+        try {
+            // 2. Identify all members of the share
+            const allMemberIds = [share.sharedBy._id, ...share.sharedWith.map(user => user._id)];
+
+            // 3. Filter out the user who created the payment
+            const recipients = allMemberIds.filter(
+                memberId => memberId.toString() !== currentUser._id.toString()
+            );
+
+            // 4. If there are other members, send them notifications
+            if (recipients.length > 0) {
+                const notificationMessage = `${currentUser.name} added a new payment "${title}" to the "${share.title}" card.`;
+                const notificationLink = `/recipient/${shareId}`;
+
+                // Create a notification for each recipient
+                for (const recipientId of recipients) {
+                    const notification = await Notification.create({
+                        user: recipientId,
+                        message: notificationMessage,
+                        link: notificationLink,
+                    });
+
+                    // Emit the event to that user's personal room
+                    req.io.to(recipientId.toString()).emit("new_notification", notification);
+                }
+            }
+        } catch (notifyError) {
+            console.error("Error sending payment addition notifications:", notifyError);
+            // We don't fail the whole request if notifications fail
+        }
 
         res.status(201).json({ message: "Payment added successfully", payment: populatedPayment });
 

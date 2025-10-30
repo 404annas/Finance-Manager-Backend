@@ -49,6 +49,7 @@ export const createShare = async (req, res) => {
                 // C. Emit real-time event via Socket.IO
                 // Send to the specific room for this user ID
                 req.io.to(recipient._id.toString()).emit("new_notification", notification);
+                console.log(`🚀 Emitted 'new_notification' to room: ${recipient._id.toString()}`);
             }
 
         } catch (notifyError) {
