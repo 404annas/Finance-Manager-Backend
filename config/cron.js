@@ -11,7 +11,7 @@ const transporter = nodemailer.createTransport({
 });
 
 // Schedule a task to run every minute
-cron.schedule("* * * * *", async () => {
+cron.schedule("0 * * * *", async () => {
     const now = new Date();
     // console.log("Cron running at", new Date().toLocaleString());
 
