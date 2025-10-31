@@ -132,6 +132,32 @@ export const logoutUser = async (req, res) => {
     }
 };
 
+export const updateUserProfile = async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        user.name = req.body.name || user.name;
+        if (req.file) {
+            user.profileImage = req.file.path;
+        }
+        const updatedUser = await user.save();
+        res.status(200).json({
+            message: 'Profile updated successfully',
+            user: {
+                _id: updatedUser._id,
+                name: updatedUser.name,
+                email: updatedUser.email,
+                profileImage: updatedUser.profileImage,
+            },
+        });
+        // console.log(user)
+    } catch (error) {
+        res.status(500).json({ message: 'Server error' });
+    }
+}
+
 export const getUserDashboard = (req, res) => {
     res.json({
         message: "Welcome to Dashboard",
