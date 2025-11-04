@@ -64,13 +64,13 @@ io.use((socket, next) => {
         if (err) {
             return next(new Error("Authentication Error: Invalid token"));
         }
-        socket.userId = decoded._id; // Attach the user ID from your JWT payload
+        socket.userId = decoded.id; // Attach the user ID from your JWT payload
         next();
     });
 });
 
 io.on("connection", (socket) => {
-    console.log(`✅ User connected: ${socket.id} with User ID: ${socket.userId}`);
+    // console.log(`✅ User connected: ${socket.id} with User ID: ${socket.userId}`);
 
     // Join a personal room for targeted notifications
     socket.join(socket.userId);
@@ -82,7 +82,7 @@ io.on("connection", (socket) => {
 // --- End of New Socket.IO Code ---
 
 app.get("/", (req, res) => {
-    res.send("App is running");
+    res.send("FinSync Manager - App is running");
 })
 
 app.use("/api", userRoutes);

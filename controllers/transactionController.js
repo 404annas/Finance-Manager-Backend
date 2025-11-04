@@ -3,7 +3,7 @@ import Transaction from "../models/transactionModel.js";
 // Create a transaction
 export const createTransaction = async (req, res) => {
     try {
-        const { title, amount, category, currency, type } = req.body;
+        const { title, amount, category, currency, type, date, description } = req.body;
         let imageUrl = null;
 
         if (req.file) {
@@ -17,6 +17,8 @@ export const createTransaction = async (req, res) => {
             category,
             currency,
             type,
+            date,
+            description,
             imageUrl,
         });
 

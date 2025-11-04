@@ -11,6 +11,8 @@ const transactionSchema = new mongoose.Schema({
     category: { type: String, required: true },
     currency: { type: String, required: true },
     type: { type: String, enum: ["income", "expense"], required: true },
+    date: { type: Date, default: Date.now },
+    description: { type: String, trim: true, default: null },
     imageUrl: { type: String, default: null },
 }, { timestamps: true });
 

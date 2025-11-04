@@ -11,7 +11,6 @@ const inviteSchema = new mongoose.Schema({
     expiresAt: { type: Date, default: Date.now, expires: "7d" },
 }, { timestamps: true });
 
-inviteSchema.index({ email: 1 });
 inviteSchema.index({ token: 1 });
 
 export default mongoose.model("Invite", inviteSchema);

@@ -11,9 +11,9 @@ export const authMiddleware = async (req, res, next) => {
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        console.log("Decoded token:", decoded); // 👈 check karo kya aa raha hai
+        // console.log("Decoded token:", decoded);
         const user = await User.findById(decoded.id).select("-password");
-        console.log("User from middleware:", user); // 👈 ye bhi check
+        // console.log("User from middleware:", user);
         if (!user) return res.status(404).json({ message: "User not found" });
 
         req.user = user;
