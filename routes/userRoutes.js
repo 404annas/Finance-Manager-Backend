@@ -5,7 +5,7 @@ import { authMiddleware } from "../middlewares/authMiddleware.js";
 
 const userRoutes = express.Router();
 
-userRoutes.post("/register", upload.single("file"), registerUser);
+userRoutes.post("/register", upload.single("profileImage"), registerUser);
 
 userRoutes.post("/login", loginUser);
 
