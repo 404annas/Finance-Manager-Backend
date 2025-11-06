@@ -19,12 +19,28 @@ export const getDashboardStats = async (req, res) => {
         const totalExpenses = monthlyTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
         const totalTransactions = monthlyTransactions.length;
 
-        // --- THE FIX: Use .populate() to get the full user objects ---
-        const user = await User.find({ invitedBy: userId }).select("name status");
-        // `user.invitedUsers` is now an array of objects: [{_id, name, email}, ...]
-        const connectedUsers = user.filter(user => user.status === 'accepted');
+        // --- Connected Users ---
+        const invitedUsers = await User.find({ invitedBy: userId }).select("name status");
+        const connectedUsers = invitedUsers.filter(user => user.status === 'accepted');
 
-        const upcomingSchedules = await SchedulePayment.countDocuments({ scheduledFor: userId, status: "pending" });
+        // --- THE FIX IS HERE ---
+        // Count all pending schedules where the user is either the creator OR the recipient.
+        const upcomingSchedules = await SchedulePayment.countDocuments({
+            status: "pending",
+            $or: [{ createdBy: userId }, { scheduledFor: userId }]
+        });
+
+        // --- (Optional but Recommended) Get Recent Schedules for the list ---
+        const recentSchedules = await SchedulePayment.find({
+            status: "pending",
+            $or: [{ createdBy: userId }, { scheduledFor: userId }]
+        })
+            .sort({ scheduledDate: 1 })
+            .limit(5)
+            .populate('scheduledFor', 'name')
+            .populate('createdBy', 'name')
+            .lean();
+
 
         // --- Chart Data Calculations ---
         const incomeByCategory = monthlyTransactions.filter(t => t.type === 'income').reduce((acc, t) => { acc[t.category] = (acc[t.category] || 0) + t.amount; return acc; }, {});
@@ -37,8 +53,9 @@ export const getDashboardStats = async (req, res) => {
             totalIncome,
             totalExpenses,
             totalTransactions,
-            connectedUsers, // This is now an array of objects
-            upcomingSchedules, // Added this stat back in
+            connectedUsers,
+            upcomingSchedules,
+            recentSchedules, // Added for the list on the dashboard
             incomeByCategory: Object.entries(incomeByCategory).map(([key, value]) => ({ _id: key, totalAmount: value })),
             expenseByCategory: Object.entries(expenseByCategory).map(([key, value]) => ({ _id: key, totalAmount: value })),
             dailyUsage: Object.entries(dailyUsage).map(([key, value]) => ({ day: key, count: value })).sort((a, b) => new Date(a.day) - new Date(b.day)),

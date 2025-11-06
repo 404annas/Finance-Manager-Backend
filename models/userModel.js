@@ -31,9 +31,13 @@ const userSchema = new mongoose.Schema({
         ref: "User",
         default: null
     },
+    invitedUsers: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
+    }],
 }, { timestamps: true });
 
-userSchema.index({ invitedBy: 1 });
+// userSchema.index({ invitedBy: 1 });
 
 const User = new mongoose.model("User", userSchema);
 

@@ -7,46 +7,63 @@ import nodemailer from "nodemailer";
 export const registerUser = async (req, res) => {
     try {
         const { name, email, password, token: inviteToken } = req.body;
+        const profileImagePath = req.file ? req.file.path : null;
+
+        if (!name || !email || !password) {
+            return res.status(400).json({ message: "Name, email, and password are required." });
+        }
 
         const existingUser = await User.findOne({ email });
         if (existingUser) {
-            return res.status(400).json({ message: "User Already Exists" });
+            return res.status(400).json({ message: "An account with this email already exists." });
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
-        const profileImage = req.file ? req.file.path : null;
 
         let status = "pending";
-        let invitedById = null; // <-- FIX: Prepare a variable to hold the inviter's ID.
+        let invitedById = null;
+        let inviter = null;
 
         if (inviteToken) {
             let decodedToken;
             try {
                 decodedToken = jwt.verify(inviteToken, process.env.JWT_SECRET);
-                if (decodedToken.email !== email) {
-                    return res.status(400).json({ message: "Invalid invite token for this email." });
-                }
             } catch (jwtError) {
-                return res.status(400).json({ message: "Invalid or expired invite token." });
+                return res.status(400).json({ message: "This invitation link is invalid or has expired." });
             }
 
-            const invite = await Invite.findOne({ token: inviteToken, email });
-            if (invite) {
-                status = "accepted";
-                invitedById = invite.invitedBy; // <-- FIX: Get the ID from the invite document.
+            if (decodedToken.email.toLowerCase() !== email.toLowerCase()) {
+                return res.status(400).json({ message: "This invitation is not for this email address." });
             }
+
+            const invite = await Invite.findOne({ token: inviteToken });
+            if (!invite) {
+                return res.status(400).json({ message: "This invitation has already been used or is no longer valid." });
+            }
+
+            status = "accepted";
+            invitedById = invite.invitedBy;
+            inviter = await User.findById(invitedById);
         }
 
         const user = await User.create({
             name,
             email,
             password: hashedPassword,
-            profileImage,
+            profileImage: profileImagePath,
             status,
-            invitedBy: invitedById, // <-- FIX: Save the inviter's ID when creating the new user.
+            invitedBy: invitedById,
         });
 
-        // ... (Send welcome email code remains the same)
+        if (user && inviter) {
+            if (!inviter.invitedUsers) {
+                inviter.invitedUsers = [];
+            }
+            inviter.invitedUsers.push(user._id);
+            await inviter.save();
+            await Invite.deleteOne({ token: inviteToken });
+        }
+
         const transporter = nodemailer.createTransport({
             host: process.env.SMTP_HOST,
             port: process.env.SMTP_PORT,
@@ -59,17 +76,12 @@ export const registerUser = async (req, res) => {
         await transporter.sendMail({
             from: process.env.FROM_EMAIL,
             to: user.email,
-            subject: "Welcome to Finance Dashboard 🎉",
-            html: `<h2>Hello ${user.name},</h2>
-                   <p>Your account has been created successfully.</p>
-                   <p>Login with your email: <b>${user.email}</b></p>
-                   <br />
-                   <p>Best regards,<br/>Finance Dashboard Team</p>`,
+            subject: "Welcome to FinSync Dashboard 🎉",
+            html: `<h2>Hello ${user.name},</h2><p>Your account has been created successfully.</p><p>Best regards,<br/>FinSync Dashboard Team</p>`,
         });
 
-        // This declaration is now valid because 'token' hasn't been used before in this scope
         const authToken = jwt.sign(
-            { id: user._id, email: user.email },
+            { _id: user._id, email: user.email },
             process.env.JWT_SECRET,
             { expiresIn: "7d" }
         );
@@ -78,17 +90,17 @@ export const registerUser = async (req, res) => {
             message: "User registered successfully",
             token: authToken,
             user: {
-                id: user._id,
+                _id: user._id,
                 name: user.name,
                 email: user.email,
-                profileImage: user.profileImage || null,
+                profileImage: user.profileImage,
                 status: user.status
             },
         });
 
     } catch (error) {
         console.error("Error registering user:", error);
-        res.status(500).json({ message: "Error registering user", error: error.message });
+        res.status(500).json({ message: "Server error during registration." });
     }
 };
 
@@ -102,8 +114,9 @@ export const loginUser = async (req, res) => {
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) return res.status(400).json({ message: "Invalid Email or Password" });
 
+        // --- CORRECTED TOKEN CREATION ---
         const token = jwt.sign(
-            { id: user._id, email: user.email }, // id aur email dono include
+            { _id: user._id, email: user.email }, // Use `_id` to match the middleware
             process.env.JWT_SECRET,
             { expiresIn: "7d" }
         );
@@ -112,10 +125,10 @@ export const loginUser = async (req, res) => {
             message: "Login successful",
             token,
             user: {
-                id: user._id,
+                _id: user._id,
                 name: user.name,
                 email: user.email,
-                profileImage: user.profileImage || null,
+                profileImage: user.profileImage,
                 status: user.status
             },
         });
@@ -152,11 +165,10 @@ export const updateUserProfile = async (req, res) => {
                 profileImage: updatedUser.profileImage,
             },
         });
-        // console.log(user)
     } catch (error) {
         res.status(500).json({ message: 'Server error' });
     }
-}
+};
 
 export const getUserDashboard = (req, res) => {
     res.json({

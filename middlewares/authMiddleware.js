@@ -3,22 +3,28 @@ import User from "../models/userModel.js";
 
 export const authMiddleware = async (req, res, next) => {
     let token;
+
     if (req.headers.authorization && req.headers.authorization.startsWith("Bearer ")) {
-        token = req.headers.authorization.split(" ")[1];
+        try {
+            token = req.headers.authorization.split(" ")[1];
+
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+            req.user = await User.findById(decoded._id).select("-password");
+
+            if (!req.user) {
+                return res.status(401).json({ message: "Not authorized, user not found" });
+            }
+
+            next();
+
+        } catch (err) {
+            console.error("Authentication Error:", err.message);
+            res.status(401).json({ message: "Not authorized, token failed" });
+        }
     }
 
-    if (!token) return res.status(401).json({ message: "Not authorized" });
-
-    try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        // console.log("Decoded token:", decoded);
-        const user = await User.findById(decoded.id).select("-password");
-        // console.log("User from middleware:", user);
-        if (!user) return res.status(404).json({ message: "User not found" });
-
-        req.user = user;
-        next();
-    } catch (err) {
-        res.status(401).json({ message: "Not authorized", error: err.message });
+    if (!token) {
+        return res.status(401).json({ message: "Not authorized, no token provided" });
     }
 };
