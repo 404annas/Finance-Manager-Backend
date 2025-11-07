@@ -2,6 +2,11 @@ import cron from "node-cron";
 import nodemailer from "nodemailer";
 import SchedulePayment from "../models/schedulePaymentModel.js";
 
+// Check if environment variables are loaded
+if (!process.env.SMTP_USER || !process.env.SMTP_PASS || !process.env.FROM_EMAIL_ALIAS) {
+    console.error("❌ CRON ERROR: SMTP environment variables (USER, PASS, or ALIAS) are not loaded.");
+}
+
 const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
@@ -10,13 +15,15 @@ const transporter = nodemailer.createTransport({
     },
 });
 
-// REMOVED the timezone option. This cron job now runs every minute based on the server's clock (which is UTC).
+// console.log("✅ Cron job service initialized. Waiting for tasks...");
+
 cron.schedule("* * * * *", async () => {
-    // THE FIX: Use a simple `new Date()`. This gets the current time in UTC.
+    // console.log(`\n🕒 Cron job running at: ${new Date().toLocaleString()}`);
+
     const nowUTC = new Date();
+    // console.log(`   - Current UTC time for query: ${nowUTC.toISOString()}`);
 
     try {
-        // The query now compares UTC with UTC, which is universally correct.
         const payments = await SchedulePayment.find({
             status: "pending",
             scheduledDate: { $lte: nowUTC },
@@ -25,25 +32,33 @@ cron.schedule("* * * * *", async () => {
             { path: 'scheduledFor', select: 'name email' }
         ]);
 
+        // console.log(`   - Found ${payments.length} pending payments to process.`);
+
+        if (payments.length === 0) {
+            return;
+        }
+
         for (let payment of payments) {
+            console.log(`   - Processing payment ID: ${payment._id} for "${payment.title}"`);
+
             if (!payment.createdBy || !payment.scheduledFor) {
-                console.log(`Skipping payment ${payment._id} due to missing user data.`);
+                console.log(`   - ⚠️ SKIPPING payment ${payment._id} due to missing user data.`);
                 continue;
             }
 
             const creator = payment.createdBy;
             const recipient = payment.scheduledFor;
-
-            // The 'from' address is formatted to show the creator's name.
-            const fromAddress = `"${creator.name} (via FinSync)" <${process.env.SMTP_USER}>`;
-
-            // We format the date in the email to be clear and readable.
-            // Using `toLocaleString` without a specific timezone will often use the server's locale,
-            // which is a reasonable default for an email.
             const formattedScheduledDate = new Date(payment.scheduledDate).toLocaleString();
 
+            // --- THE FIX IS HERE ---
+            // We now use a special "From" address that includes the creator's name and our new plus-aliased email.
+            // This ensures the From/To addresses are never identical, even when sending to yourself.
+            const fromAddress = `"${creator.name} (via FinSync)" <${process.env.FROM_EMAIL_ALIAS}>`;
+
+            console.log(`   - Attempting to send email from: ${fromAddress} to: ${recipient.email}`);
+
             await transporter.sendMail({
-                from: fromAddress,
+                from: fromAddress, // Use the new aliased "from" address
                 to: recipient.email,
                 subject: `Payment Reminder: ${payment.title}`,
                 html: `
@@ -62,11 +77,13 @@ cron.schedule("* * * * *", async () => {
                 `
             });
 
+            console.log(`   - ✅ Email sent successfully for payment ID: ${payment._id}`);
+
             payment.status = "done";
             await payment.save();
-            console.log(`Payment "${payment.title}" from ${creator.name} to ${recipient.name} marked as done and email sent.`);
+            console.log(`   - ✅ Payment ID: ${payment._id} marked as 'done'.`);
         }
     } catch (err) {
-        console.error("Cron job error:", err);
+        console.error("   - ❌ CRON JOB ERROR:", err);
     }
 });

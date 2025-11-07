@@ -21,17 +21,14 @@ export const createShare = async (req, res) => {
         // After successfully creating the share, send notifications.
         try {
             // 2. Prepare notification details
-            const notificationMessage = `${req.user.name} shared a payment card "${title}" with you.`;
-            const notificationLink = `/recipient/${newShare._id}`;
+            // const notificationMessage = `${req.user.name} shared a payment card "${title}" with you.`;
+            // const notificationLink = `/recipient/${newShare._id}`;
 
             // 3. Get recipient details for both emails and real-time notifications
             const recipients = await User.find({ '_id': { $in: sharedWith } }).select("name email _id");
 
             // 4. Loop through each recipient
             for (const recipient of recipients) {
-                // A. Send Email (Your existing logic)
-                // It's good practice to await this to ensure emails are sent,
-                // but you could also fire-and-forget if speed is critical.
                 await sendShareNotificationEmail(
                     recipient.email,
                     req.user.name,
@@ -40,21 +37,20 @@ export const createShare = async (req, res) => {
                 );
 
                 // B. Create persistent notification in MongoDB
-                const notification = await Notification.create({
-                    user: recipient._id, // The ID of the user receiving the notification
-                    message: notificationMessage,
-                    link: notificationLink,
-                });
+                // const notification = await Notification.create({
+                //     user: recipient._id, // The ID of the user receiving the notification
+                //     message: notificationMessage,
+                //     link: notificationLink,
+                // });
 
-                // C. Emit real-time event via Socket.IO
-                // Send to the specific room for this user ID
-                req.io.to(recipient._id.toString()).emit("new_notification", notification);
-                console.log(`🚀 Emitted 'new_notification' to room: ${recipient._id.toString()}`);
+                // // C. Emit real-time event via Socket.IO
+                // // Send to the specific room for this user ID
+                // req.io.to(recipient._id.toString()).emit("new_notification", notification);
+                // console.log(`🚀 Emitted 'new_notification' to room: ${recipient._id.toString()}`);
             }
 
-        } catch (notifyError) {
-            // Log error but don't fail the main request if notifications fail
-            console.error("Error sending notifications (email or socket):", notifyError);
+        } catch (emailError) {
+            console.error("Error sending share notification emails:", emailError);
         }
 
         res.status(201).json({ message: "Payment shared successfully", share: newShare });

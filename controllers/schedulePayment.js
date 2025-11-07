@@ -1,5 +1,4 @@
 import SchedulePayment from "../models/schedulePaymentModel.js";
-import moment from "moment-timezone";
 
 export const addSchedule = async (req, res) => {
     try {
@@ -11,14 +10,6 @@ export const addSchedule = async (req, res) => {
             return res.status(400).json({ message: "Missing required fields." });
         }
 
-        // 2. THE FIX: Interpret the incoming date string in the context of your target timezone.
-        // This tells moment, "Take this string, and treat it as if it's 'Asia/Karachi' time."
-        const scheduledMoment = moment.tz(scheduledDate, "Asia/Karachi");
-
-        // 3. Convert the timezone-aware moment object back to a standard JS Date.
-        // This object now correctly represents the UTC equivalent of the user's intended local time.
-        const scheduledDateUTC = scheduledMoment.toDate();
-
         const schedulePromises = scheduledForIds.map(userId => {
             return SchedulePayment.create({
                 createdBy,
@@ -26,7 +17,7 @@ export const addSchedule = async (req, res) => {
                 title,
                 message,
                 // 4. Save the corrected UTC date to the database.
-                scheduledDate: scheduledDateUTC,
+                scheduledDate: new Date(scheduledDate),
             });
         });
 
