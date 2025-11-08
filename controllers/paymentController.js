@@ -2,6 +2,8 @@ import Payment from "../models/paymentModel.js";
 import Share from "../models/shareModel.js";
 import Notification from "../models/notification.js";
 
+// Recipients Payment Controller
+
 // Helper function for security check
 const isUserInShare = (share, userId) => {
     const isOwner = share.sharedBy.toString() === userId.toString();
@@ -70,6 +72,44 @@ export const addPayment = async (req, res) => {
     } catch (error) {
         console.error("Error adding payment:", error)
         res.status(500).json({ message: "Server error while adding payment." });
+    }
+};
+
+// Update Recipient Payments
+export const updatePayment = async (req, res) => {
+    try {
+        const { paymentId } = req.params;
+        const { title, category, currency, amount, status } = req.body;
+        const currentUser = req.user;
+
+        const payment = await Payment.findById(paymentId);
+        if (!payment) {
+            return res.status(404).json({ message: "Payment not found." });
+        }
+
+        // Security check: Only the user who created the payment can edit it.
+        if (payment.createdBy.toString() !== currentUser._id.toString()) {
+            return res.status(403).json({ message: "Not authorized to edit this payment." });
+        }
+
+        payment.title = title || payment.title;
+        payment.category = category || payment.category;
+        payment.currency = currency || payment.currency;
+        payment.amount = amount || payment.amount;
+        payment.status = status || payment.status;
+
+        if (req.file) {
+            payment.image = req.file.path;
+        }
+
+        const updatedPayment = await payment.save();
+        const populatedPayment = await Payment.findById(updatedPayment._id).populate("createdBy", "name _id");
+
+        res.status(200).json({ message: "Payment updated successfully", payment: populatedPayment });
+
+    } catch (error) {
+        console.error("Error updating payment:", error);
+        res.status(500).json({ message: "Server error while updating payment." });
     }
 };
 

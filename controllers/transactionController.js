@@ -29,6 +29,39 @@ export const createTransaction = async (req, res) => {
     }
 };
 
+// Update transactions for current user
+export const updateTransaction = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { title, amount, category, currency, type, date, description } = req.body;
+
+        const transaction = await Transaction.findOne({ _id: id, userId: req.user._id })
+
+        if (!transaction) {
+            return res.status(404).json({ message: "Transaction not found or you're not authorized to edit it." })
+        }
+
+        transaction.title = title || transaction.title;
+        transaction.amount = amount || transaction.amount;
+        transaction.category = category || transaction.category;
+        transaction.currency = currency || transaction.currency;
+        transaction.type = type || transaction.type;
+        transaction.date = date || transaction.date;
+        transaction.description = description;
+
+        if (req.file) {
+            transaction.imageUrl = req.file.path;
+        }
+
+        const updatedTransaction = await transaction.save();
+        res.status(200).json(updatedTransaction);
+
+    } catch (error) {
+        console.error("Error updating transaction:", error);
+        res.status(500).json({ message: "Server Error" });
+    }
+}
+
 // Get all transactions for current user
 export const getUserTransactions = async (req, res) => {
     try {

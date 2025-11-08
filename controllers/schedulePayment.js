@@ -30,6 +30,32 @@ export const addSchedule = async (req, res) => {
     }
 };
 
+export const updateSchedule = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { title, message, scheduledDate } = req.body;
+
+        const schedule = await SchedulePayment.findOne({ _id: id, createdBy: req.user._id });
+
+        if (!schedule) {
+            return res.status(404).json({ message: "Schedule not found or you're not authorized to edit it." });
+        }
+
+        schedule.title = title || schedule.title;
+        schedule.message = message || "";
+        schedule.scheduledDate = scheduledDate ? new Date(scheduledDate) : schedule.scheduledDate;
+
+        schedule.status = 'pending';
+
+        await schedule.save();
+        res.status(200).json({ message: "Schedule updated successfully." });
+
+    } catch (error) {
+        console.error("Error updating schedule:", error);
+        res.status(500).json({ message: "Server error while updating schedule." });
+    }
+};
+
 export const getSchedules = async (req, res) => {
     try {
         // Find schedules where the current user is either the creator OR the recipient
