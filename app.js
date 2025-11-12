@@ -22,6 +22,7 @@ import shareRoute from "./routes/shareRoute.js";
 import paymentRoute from "./routes/paymentRoute.js";
 import notificationRouter from "./routes/notificationRoutes.js";
 import dashboardRouter from "./routes/dashboardRoute.js";
+import connectionRoutes from "./routes/connectionRoutes.js";
 
 dotenv.config();
 
@@ -100,6 +101,7 @@ app.use("/api", shareRoute);
 app.use("/api", paymentRoute);
 app.use("/api", notificationRouter);
 app.use("/api", dashboardRouter);
+app.use("/api", connectionRoutes);
 
 const PORT = process.env.PORT || 8080;
 

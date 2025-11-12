@@ -11,8 +11,8 @@ const deleteUser = async (req, res) => {
             return res.status(404).json({ message: "User not found" });
         }
 
-        // Delete invites related to this user's email
-        const deletedInvites = await Invite.deleteMany({ email: deletedUser.email });
+        // Delete invites sent by this user (where they are the inviter)
+        const deletedInvites = await Invite.deleteMany({ invitedBy: deletedUser._id });
 
         res.status(200).json({
             message: "User and related invites deleted successfully",

@@ -115,3 +115,24 @@ export const sendShareNotificationEmail = async (recipientEmail, sharerName, sha
     console.error(`Error sending share notification to ${recipientEmail}:`, error);
   }
 };
+
+export const sendConnectionRequestEmail = async (to, requesterName) => {
+  try {
+    const mailOptions = {
+      from: process.env.FROM_EMAIL,
+      to,
+      subject: `🤝 ${requesterName} wants to connect on FinSync`,
+      html: `
+        <p>Hi there,</p>
+        <p><b>${requesterName}</b> has sent you a connection request on FinSync.</p>
+        <p>Please log in to your account to accept or decline this request from your dashboard.</p>
+        <a href="https://finance-manage-kappa.vercel.app/login">Go to Dashboard</a>
+      `
+    };
+    await transporter.sendMail(mailOptions);
+    console.log(`✅ Connection request email sent to: ${to}`);
+  } catch (error) {
+    console.error("❌ Error sending connection email:", error);
+    throw error;
+  }
+};
