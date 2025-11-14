@@ -2,29 +2,42 @@ import User from "../models/userModel.js";
 
 const viewUsers = async (req, res) => {
     try {
-        const loggedInUser = req.user;
+        const loggedInUserId = req.user._id;
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
 
-        // Query 1: Find all users that the logged-in user has invited.
-        const invitedUsers = await User.find({ invitedBy: loggedInUser._id }).select("name email profileImage status");
-
-        // Query 2: Find the single user who invited the logged-in user, if they exist.
-        let invitedBy = null;
-        if (loggedInUser.invitedBy) {
-            // Find the inviter's full details.
-            invitedBy = await User.findById(loggedInUser.invitedBy).select("name email profileImage status");
+        const user = await User.findById(loggedInUserId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
         }
 
-        // Return a structured object with both sets of data.
+        const connectedUserIds = user.invitedUsers;
+
+        const totalConnected = connectedUserIds.length;
+        const paginatedUserIds = connectedUserIds.slice(skip, skip + limit);
+
+        const populatedUsers = await User.find({
+            '_id': { $in: paginatedUserIds }
+        }).select('name email profileImage status');
+
+        const invitedBy = await User.findById(user.invitedBy).select('name email profileImage status');
+
         res.status(200).json({
             message: "User relationships fetched successfully",
             users: {
-                invitedUsers,
-                invitedBy
+                invitedUsers: populatedUsers,
+                invitedBy: invitedBy
+            },
+            pagination: {
+                currentPage: page,
+                totalPages: Math.ceil(totalConnected / limit),
+                totalUsers: totalConnected
             }
         });
 
     } catch (error) {
-        console.error("Error in viewUsers controller:", error);
+        console.error("❌ CRITICAL ERROR in viewUsers:", error);
         res.status(500).json({ message: "Can't Fetch Users", error: error.message });
     }
 }

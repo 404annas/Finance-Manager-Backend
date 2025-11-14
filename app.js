@@ -23,6 +23,8 @@ import paymentRoute from "./routes/paymentRoute.js";
 import notificationRouter from "./routes/notificationRoutes.js";
 import dashboardRouter from "./routes/dashboardRoute.js";
 import connectionRoutes from "./routes/connectionRoutes.js";
+import { notFound, errorHandler } from "./middlewares/notFound.js";
+import { apiLimiter, authLimiter, publicLimiter, transactionLimiter } from "./middlewares/apiRateLimit.js";
 
 dotenv.config();
 
@@ -36,8 +38,6 @@ app.use(cors({
 }));
 
 app.use(cookieParser());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 app.use(express.json({ limit: "50mb" }));
@@ -83,7 +83,7 @@ app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 // });
 // --- End of New Socket.IO Code ---
 
-app.get("/", (req, res) => {
+app.get("/", publicLimiter, (req, res) => {
     res.send("FinSync Manager - App is running");
 })
 
@@ -102,6 +102,9 @@ app.use("/api", paymentRoute);
 app.use("/api", notificationRouter);
 app.use("/api", dashboardRouter);
 app.use("/api", connectionRoutes);
+
+app.use(notFound);
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 8080;
 

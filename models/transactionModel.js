@@ -5,6 +5,7 @@ const transactionSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
         required: true,
+        index: true,
     },
     title: { type: String, required: true, trim: true },
     amount: { type: Number, required: true },
@@ -15,8 +16,6 @@ const transactionSchema = new mongoose.Schema({
     description: { type: String, trim: true, default: null },
     imageUrl: { type: String, default: null },
 }, { timestamps: true });
-
-transactionSchema.index({ userId: 1 });
 
 const Transaction = new mongoose.model("Transaction", transactionSchema);
 

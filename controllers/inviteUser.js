@@ -20,7 +20,7 @@ export const inviteUser = async (req, res) => {
 
             if (recipient) {
                 if (recipient._id.equals(requester._id)) {
-                    results.push({ email, status: "❌ Aap khud ko invite nahi kar sakte" });
+                    results.push({ email, status: "❌ You cannot invite yourself" });
                     continue;
                 }
 
@@ -29,7 +29,7 @@ export const inviteUser = async (req, res) => {
                     || recipient.invitedUsers.some(userId => userId.equals(requester._id));
 
                 if (isAlreadyConnected) {
-                    results.push({ email, status: "🤝 Pehle se connected hain" });
+                    results.push({ email, status: "🤝 Already connected" });
                     continue;
                 }
 
@@ -41,7 +41,7 @@ export const inviteUser = async (req, res) => {
                 });
 
                 if (existingRequest) {
-                    results.push({ email, status: "⏳ Request pehle se pending hai" });
+                    results.push({ email, status: "⏳ Request already pending" });
                     continue;
                 }
 
@@ -53,7 +53,7 @@ export const inviteUser = async (req, res) => {
 
                 // User ko connection request ka email bhejein
                 await sendConnectionRequestEmail(email, requester.name);
-                results.push({ email, status: "✅ Connection request bhej di gayi hai" });
+                results.push({ email, status: "✅ Connection request sent successfully" });
 
             } else {
                 const rawJwtToken = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: "7d" });
@@ -66,7 +66,7 @@ export const inviteUser = async (req, res) => {
 
                 const fullInviteLink = `https://finance-manage-kappa.vercel.app/register?token=${rawJwtToken}`;
                 await sendInviteEmail(email, fullInviteLink);
-                results.push({ email, status: "✅ Naye user ko invite bhej diya hai" });
+                results.push({ email, status: "✅ Invitation sent to new user" });
             }
         }
 
@@ -74,5 +74,57 @@ export const inviteUser = async (req, res) => {
     } catch (error) {
         console.error("❌ Invite error:", error);
         res.status(500).json({ message: "Something went wrong" });
+    }
+};
+
+export const getPendingInvites = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 5;
+        const skip = (page - 1) * limit;
+
+        const query = { invitedBy: req.user._id };
+
+        const totalInvites = await Invite.countDocuments(query);
+        const invites = await Invite.find(query)
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit);
+
+        const pendingInviteUsers = invites.map(invite => ({
+            _id: invite._id,
+            name: 'Invited User',
+            email: invite.email,
+            profileImage: 'https://images.unsplash.com/photo-1615109398623-88346a601842?ixlib=rb-4.1.0&auto=format&fit=crop&q=60&w=500',
+            connectionStatus: 'Pending (Unregistered)'
+        }));
+
+        res.status(200).json({
+            invites: pendingInviteUsers,
+            pagination: {
+                currentPage: page,
+                totalPages: Math.ceil(totalInvites / limit),
+                totalInvites: totalInvites
+            }
+        });
+    } catch (error) {
+        console.error("Error fetching pending invites:", error);
+        res.status(500).json({ message: "Failed to fetch pending invites." });
+    }
+};
+
+export const deletePendingInvite = async (req, res) => {
+    try {
+        const { inviteId } = req.params;
+        const invite = await Invite.findOne({ _id: inviteId, invitedBy: req.user._id });
+
+        if (!invite) {
+            return res.status(404).json({ message: "Invite not found or you don't have permission to delete it." });
+        }
+
+        await Invite.deleteOne({ _id: inviteId });
+        res.status(200).json({ message: "Invitation has been cancelled." });
+    } catch (error) {
+        res.status(500).json({ message: "Failed to cancel invitation." });
     }
 };

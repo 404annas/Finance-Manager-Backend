@@ -65,8 +65,55 @@ export const updateTransaction = async (req, res) => {
 // Get all transactions for current user
 export const getUserTransactions = async (req, res) => {
     try {
-        const transactions = await Transaction.find({ userId: req.user._id }).sort({ createdAt: -1 }).lean();
-        res.status(200).json(transactions);
+        const {
+            page = 1,
+            limit = 10,
+            sort = 'date',
+            order = 'desc',
+            category,
+            dateFrom,
+            dateTo
+        } = req.query;
+
+        // Convert page and limit to numbers
+        const pageNum = parseInt(page, 10);
+        const limitNum = parseInt(limit, 10);
+
+        // Calculate the number of documents to skip
+        const skip = (pageNum - 1) * limitNum;
+
+        // Base query to only get transactions for the logged-in user
+        const query = { userId: req.user._id };
+
+        if (category && category !== 'All') {
+            query.category = category;
+        }
+
+        if (dateFrom && dateTo) {
+            query.date = { $gte: new Date(dateFrom), $lte: new Date(dateTo) };
+        } else if (dateFrom) {
+            query.date = { $gte: new Date(dateFrom) };
+        } else if (dateTo) {
+            query.date = { $lte: new Date(dateTo) };
+        }
+
+        // Get the total count of documents that match the query for the frontend
+        const totalTransactions = await Transaction.countDocuments(query);
+
+        // Fetch the paginated and sorted transactions from the database
+        const transactions = await Transaction.find(query)
+            .sort({ [sort]: order === 'asc' ? 1 : -1 }) // Apply sorting
+            .skip(skip)                                 // Skip documents
+            .limit(limitNum)                            // Limit results per page
+            .lean();
+
+        // Send response with transactions and pagination metadata
+        res.status(200).json({
+            transactions,
+            currentPage: pageNum,
+            totalPages: Math.ceil(totalTransactions / limitNum),
+            totalTransactions,
+        });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Server Error" });

@@ -262,3 +262,43 @@ export const resetPassword = async (req, res) => {
         res.status(500).json({ message: "Server error during password reset" });
     }
 };
+
+export const removeConnection = async (req, res) => {
+    try {
+        const loggedInUserId = req.user._id;
+        const userToRemoveId = req.params.userId;
+
+        if (loggedInUserId.equals(userToRemoveId)) {
+            return res.status(400).json({ message: "You cannot remove yourself." });
+        }
+
+        // --- STEP 1: Dono users ko ek doosre ki 'invitedUsers' list se hatayein ---
+        // (Yeh pehle jaisa hi hai)
+        await User.findByIdAndUpdate(loggedInUserId, {
+            $pull: { invitedUsers: userToRemoveId }
+        });
+
+        await User.findByIdAndUpdate(userToRemoveId, {
+            $pull: { invitedUsers: loggedInUserId }
+        });
+
+        // --- STEP 2: 'invitedBy' field ko handle karein (NAYA LOGIC) ---
+
+        // Check karein ke kya logged-in user, doosre user ka inviter tha
+        await User.updateOne(
+            { _id: userToRemoveId, invitedBy: loggedInUserId },
+            { $set: { invitedBy: null } }
+        );
+
+        // Check karein ke kya doosra user, logged-in user ka inviter tha
+        await User.updateOne(
+            { _id: loggedInUserId, invitedBy: userToRemoveId },
+            { $set: { invitedBy: null } }
+        );
+
+        res.status(200).json({ message: "Connection successfully removed." });
+    } catch (error) {
+        console.error("Error removing connection:", error);
+        res.status(500).json({ message: "Error occurred while removing connection." });
+    }
+};

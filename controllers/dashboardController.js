@@ -20,8 +20,11 @@ export const getDashboardStats = async (req, res) => {
         const totalTransactions = monthlyTransactions.length;
 
         // --- Connected Users ---
-        const invitedUsers = await User.find({ invitedBy: userId }).select("name status");
-        const connectedUsers = invitedUsers.filter(user => user.status === 'accepted');
+        const currentUser = await User.findById(userId)
+            .populate('invitedUsers', 'name email profileImage')
+            .lean(); // Use .lean() for a plain JavaScript object
+
+        const connectedUsers = currentUser ? currentUser.invitedUsers : [];
 
         // --- THE FIX IS HERE ---
         // Count all pending schedules where the user is either the creator OR the recipient.

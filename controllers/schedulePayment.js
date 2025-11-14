@@ -16,7 +16,6 @@ export const addSchedule = async (req, res) => {
                 scheduledFor: userId,
                 title,
                 message,
-                // 4. Save the corrected UTC date to the database.
                 scheduledDate: new Date(scheduledDate),
             });
         });
@@ -58,15 +57,43 @@ export const updateSchedule = async (req, res) => {
 
 export const getSchedules = async (req, res) => {
     try {
-        // Find schedules where the current user is either the creator OR the recipient
-        const schedules = await SchedulePayment.find({
-            $or: [{ createdBy: req.user._id }, { scheduledFor: req.user._id }]
-        })
-            .populate('createdBy', 'name') // Show who created it
-            .populate('scheduledFor', 'name') // Show who it's for
-            .sort({ scheduledDate: 1 });
+        // 1. Get pagination and sorting options from query params
+        const {
+            page = 1,
+            limit = 10,
+            sort = 'scheduledDate',
+            order = 'asc' // Default to ascending to show upcoming payments first
+        } = req.query;
 
-        res.status(200).json({ schedules });
+        const pageNum = parseInt(page, 10);
+        const limitNum = parseInt(limit, 10);
+        const skip = (pageNum - 1) * limitNum;
+
+        // 2. Define the base query to find schedules for the current user
+        const query = {
+            $or: [{ createdBy: req.user._id }, { scheduledFor: req.user._id }]
+        };
+
+        // 3. Get the total count of documents that match the query
+        const totalSchedules = await SchedulePayment.countDocuments(query);
+
+        // 4. Fetch the paginated and sorted data from the database
+        const schedules = await SchedulePayment.find(query)
+            .populate('createdBy', 'name')
+            .populate('scheduledFor', 'name')
+            .sort({ [sort]: order === 'asc' ? 1 : -1 }) // Apply sorting
+            .skip(skip)                                 // Skip documents for previous pages
+            .limit(limitNum)                            // Limit results for the current page
+            .lean();
+
+        // 5. Send the paginated response
+        res.status(200).json({
+            schedules,
+            currentPage: pageNum,
+            totalPages: Math.ceil(totalSchedules / limitNum),
+            totalSchedules,
+        });
+        
     } catch (error) {
         res.status(500).json({ error: "Failed to fetch schedules" });
     }

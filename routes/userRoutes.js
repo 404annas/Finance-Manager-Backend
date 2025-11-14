@@ -1,5 +1,5 @@
 import express from "express";
-import { registerUser, loginUser, logoutUser, updateUserProfile, forgotPassword, resetPassword } from "../controllers/userController.js";
+import { registerUser, loginUser, logoutUser, updateUserProfile, forgotPassword, resetPassword, removeConnection } from "../controllers/userController.js";
 import upload from "../config/multer.js";
 import { authMiddleware } from "../middlewares/authMiddleware.js";
 
@@ -16,5 +16,7 @@ userRoutes.put("/profile", authMiddleware, upload.single("profileImage"), update
 userRoutes.post("/forgot-password", forgotPassword);
 
 userRoutes.post("/reset-password/:token", resetPassword);
+
+userRoutes.delete("/connections/:userId", authMiddleware, removeConnection);
 
 export default userRoutes;
