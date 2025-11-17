@@ -24,7 +24,7 @@ import notificationRouter from "./routes/notificationRoutes.js";
 import dashboardRouter from "./routes/dashboardRoute.js";
 import connectionRoutes from "./routes/connectionRoutes.js";
 import { notFound, errorHandler } from "./middlewares/notFound.js";
-import { apiLimiter, authLimiter, publicLimiter, transactionLimiter } from "./middlewares/apiRateLimit.js";
+import { publicLimiter } from "./middlewares/apiRateLimit.js";
 
 dotenv.config();
 
