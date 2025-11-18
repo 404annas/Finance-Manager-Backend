@@ -3,11 +3,11 @@ import Transaction from "../models/transactionModel.js";
 // Create a transaction
 export const createTransaction = async (req, res) => {
     try {
-        const { title, amount, category, currency, type, date, description } = req.body;
-        let imageUrl = null;
+        const { title, amount, category, currency, type, date, description, imageUrl } = req.body;
 
-        if (req.file) {
-            imageUrl = req.file.path; // multer + cloudinary
+        if (!title || !amount || !category || !type) {
+            res.status(400);
+            throw new Error("Missing required transaction fields.");
         }
 
         const transaction = await Transaction.create({
@@ -19,7 +19,7 @@ export const createTransaction = async (req, res) => {
             type,
             date,
             description,
-            imageUrl,
+            imageUrl: imageUrl || null,
         });
 
         res.status(201).json(transaction);
@@ -33,27 +33,20 @@ export const createTransaction = async (req, res) => {
 export const updateTransaction = async (req, res) => {
     try {
         const { id } = req.params;
-        const { title, amount, category, currency, type, date, description } = req.body;
 
-        const transaction = await Transaction.findOne({ _id: id, userId: req.user._id })
+        const updateData = req.body;
 
-        if (!transaction) {
-            return res.status(404).json({ message: "Transaction not found or you're not authorized to edit it." })
+        const updatedTransaction = await Transaction.findOneAndUpdate(
+            { _id: id, userId: req.user._id }, // Find criteria
+            { $set: updateData }, // Atomically set the new data
+            { new: true, runValidators: true } // Options: return the updated doc
+        );
+
+        if (!updatedTransaction) {
+            res.status(404);
+            throw new Error("Transaction not found or you're not authorized to edit it.");
         }
 
-        transaction.title = title || transaction.title;
-        transaction.amount = amount || transaction.amount;
-        transaction.category = category || transaction.category;
-        transaction.currency = currency || transaction.currency;
-        transaction.type = type || transaction.type;
-        transaction.date = date || transaction.date;
-        transaction.description = description;
-
-        if (req.file) {
-            transaction.imageUrl = req.file.path;
-        }
-
-        const updatedTransaction = await transaction.save();
         res.status(200).json(updatedTransaction);
 
     } catch (error) {

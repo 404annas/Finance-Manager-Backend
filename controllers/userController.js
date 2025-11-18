@@ -68,8 +68,8 @@ export const registerUser = async (req, res) => {
         await transporter.sendMail({
             from: process.env.FROM_EMAIL,
             to: user.email,
-            subject: "Welcome to FinSync Dashboard 🎉",
-            html: `<h2>Hello ${user.name},</h2><p>Your account has been created successfully.</p><p>Best regards,<br/>FinSync Dashboard Team</p>`,
+            subject: "Welcome to Finantic Dashboard 🎉",
+            html: `<h2>Hello ${user.name},</h2><p>Your account has been created successfully.</p><p>Best regards,<br/>Finantic Dashboard Team</p>`,
         });
 
         const authToken = jwt.sign(
@@ -213,7 +213,7 @@ export const forgotPassword = async (req, res) => {
                    <a href="${resetLink}" style="display: inline-block; padding: 10px 20px; background-color: #6667DD; color: white; text-decoration: none; border-radius: 5px; margin: 10px 0;">Reset Password</a>
                    <p>This link will expire in 1 hour.</p>
                    <p>If you did not request this, please ignore this email.</p>
-                   <p>Best regards,<br/>FinSync Dashboard Team</p>`,
+                   <p>Best regards,<br/>Finantic Dashboard Team</p>`,
         });
 
         res.status(200).json({

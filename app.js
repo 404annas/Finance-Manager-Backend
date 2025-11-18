@@ -25,6 +25,7 @@ import dashboardRouter from "./routes/dashboardRoute.js";
 import connectionRoutes from "./routes/connectionRoutes.js";
 import { notFound, errorHandler } from "./middlewares/notFound.js";
 import { publicLimiter } from "./middlewares/apiRateLimit.js";
+import transactionPictureUploadRoute from "./routes/transactionsPictureUploadRoute.js";
 
 dotenv.config();
 
@@ -84,7 +85,7 @@ app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 // --- End of New Socket.IO Code ---
 
 app.get("/", publicLimiter, (req, res) => {
-    res.send("FinSync Manager - App is running");
+    res.send("Finantic Manager - App is running");
 })
 
 app.use("/api", userRoutes);
@@ -102,6 +103,7 @@ app.use("/api", paymentRoute);
 app.use("/api", notificationRouter);
 app.use("/api", dashboardRouter);
 app.use("/api", connectionRoutes);
+app.use("/api", transactionPictureUploadRoute);
 
 app.use(notFound);
 app.use(errorHandler);

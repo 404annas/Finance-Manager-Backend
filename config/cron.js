@@ -39,7 +39,7 @@ cron.schedule("*/5 * * * *", async () => {
             const recipient = payment.scheduledFor;
             const formattedScheduledDate = new Date(payment.scheduledDate).toLocaleString();
 
-            const fromAddress = `"${creator.name} (via FinSync)" <${process.env.FROM_EMAIL_ALIAS}>`;
+            const fromAddress = `"${creator.name} (via Finantic)" <${process.env.FROM_EMAIL_ALIAS}>`;
 
             await transporter.sendMail({
                 from: fromAddress,
@@ -56,7 +56,7 @@ cron.schedule("*/5 * * * *", async () => {
                             <p>${payment.message || "No message provided."}</p>
                         </blockquote>
                         <hr style="border:none; border-top:1px solid #eee; margin:20px 0;" />
-                        <p style="font-size: 0.9rem; color:#555;">This is an automated reminder sent from the FinSync application on behalf of ${creator.name}.</p>
+                        <p style="font-size: 0.9rem; color:#555;">This is an automated reminder sent from the Finantic application on behalf of ${creator.name}.</p>
                     </div>
                 `
             });

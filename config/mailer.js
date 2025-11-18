@@ -121,10 +121,10 @@ export const sendConnectionRequestEmail = async (to, requesterName) => {
     const mailOptions = {
       from: process.env.FROM_EMAIL,
       to,
-      subject: `🤝 ${requesterName} wants to connect on FinSync`,
+      subject: `🤝 ${requesterName} wants to connect on Finantic`,
       html: `
         <p>Hi there,</p>
-        <p><b>${requesterName}</b> has sent you a connection request on FinSync.</p>
+        <p><b>${requesterName}</b> has sent you a connection request on Finantic.</p>
         <p>Please log in to your account to accept or decline this request from your dashboard.</p>
         <a href="https://finance-manage-kappa.vercel.app/login">Go to Dashboard</a>
       `
