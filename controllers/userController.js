@@ -69,7 +69,125 @@ export const registerUser = async (req, res) => {
             from: process.env.FROM_EMAIL,
             to: user.email,
             subject: "Welcome to Finantic Dashboard 🎉",
-            html: `<h2>Hello ${user.name},</h2><p>Your account has been created successfully.</p><p>Best regards,<br/>Finantic Dashboard Team</p>`,
+            html: `
+        <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to Finantic Dashboard</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5;">
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f5f5f5;">
+        <tr>
+            <td style="padding: 40px 20px;">
+                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                    
+                    <!-- Header -->
+                    <tr>
+                        <td style="padding: 40px 40px 30px 40px; text-align: center; border-bottom: 1px solid #e5e5e5;">
+                            <h1 style="margin: 0 0 10px 0; font-size: 24px; font-weight: 600; color: #1a1a1a; letter-spacing: -0.3px;">
+                                Finantic Dashboard
+                            </h1>
+                            <p style="margin: 0; font-size: 14px; color: #666666;">
+                                Welcome to Your Finantic
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Main Content -->
+                    <tr>
+                        <td style="padding: 40px;">
+                            <h2 style="margin: 0 0 20px 0; font-size: 20px; font-weight: 600; color: #1a1a1a;">
+                                Welcome, ${user.name}!
+                            </h2>
+                            
+                            <p style="margin: 0 0 20px 0; font-size: 15px; line-height: 1.6; color: #333333;">
+                                Thank you for joining Finantic Dashboard. Your account has been successfully created, and you're ready to start managing your finances with our comprehensive suite of tools.
+                            </p>
+                            
+                            <p style="margin: 0 0 30px 0; font-size: 15px; line-height: 1.6; color: #333333;">
+                                Our platform is designed to help you track expenses, manage budgets, and make informed financial decisions with ease.
+                            </p>
+                            
+                            <!-- Info Box -->
+                            <div style="margin: 0 0 30px 0; padding: 20px; background-color: #f8f9fa; border-left: 3px solid #2563eb; border-radius: 4px;">
+                                <p style="margin: 0 0 12px 0; font-size: 14px; font-weight: 600; color: #1a1a1a;">
+                                    Getting Started
+                                </p>
+                                <p style="margin: 0; font-size: 14px; line-height: 1.5; color: #555555;">
+                                    Log in to your dashboard to explore features, set up your financial accounts, and customize your experience. Our intuitive interface makes it easy to get up and running quickly.
+                                </p>
+                            </div>
+                            
+                            <!-- CTA Button -->
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                <tr>
+                                    <td style="text-align: center; padding: 0 0 30px 0;">
+                                        <a href="https://finance-manage-kappa.vercel.app/login" style="display: inline-block; padding: 14px 40px; background-color: #2563eb; color: #ffffff; text-decoration: none; font-size: 15px; font-weight: 500; border-radius: 6px; letter-spacing: 0.2px;">
+                                            Go to Dashboard
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <!-- Features Section -->
+                            <div style="margin: 0 0 25px 0; padding: 20px; background-color: #fafafa; border-radius: 6px;">
+                                <p style="margin: 0 0 15px 0; font-size: 14px; font-weight: 600; color: #1a1a1a; text-align: center;">
+                                    What You Can Do
+                                </p>
+                                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                    <tr>
+                                        <td style="padding: 8px 0; font-size: 14px; color: #555555;">
+                                            • Track and categorize expenses
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 8px 0; font-size: 14px; color: #555555;">
+                                            • Share payments with connections
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 8px 0; font-size: 14px; color: #555555;">
+                                            • View detailed financial insights
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 8px 0; font-size: 14px; color: #555555;">
+                                            • Manage budgets and goals
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                            
+                            <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #666666; text-align: center;">
+                                Need help? Our support team is available to assist you at any time.
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td style="padding: 30px 40px; background-color: #fafafa; text-align: center; border-top: 1px solid #e5e5e5; border-radius: 0 0 8px 8px;">
+                            <p style="margin: 0 0 8px 0; font-size: 14px; color: #666666;">
+                                Best regards,
+                            </p>
+                            <p style="margin: 0 0 15px 0; font-size: 14px; font-weight: 500; color: #1a1a1a;">
+                                Finantic Dashboard Team
+                            </p>
+                            <p style="margin: 0; font-size: 12px; color: #999999;">
+                                © 2025 Finantic Dashboard. All rights reserved.
+                            </p>
+                        </td>
+                    </tr>
+                    
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+    `,
         });
 
         const authToken = jwt.sign(
@@ -207,13 +325,102 @@ export const forgotPassword = async (req, res) => {
             from: process.env.FROM_EMAIL,
             to: user.email,
             subject: "Password Reset Request",
-            html: `<h2>Hello ${user.name},</h2>
-                   <p>You have requested to reset your password.</p>
-                   <p>Click the link below to reset your password:</p>
-                   <a href="${resetLink}" style="display: inline-block; padding: 10px 20px; background-color: #6667DD; color: white; text-decoration: none; border-radius: 5px; margin: 10px 0;">Reset Password</a>
-                   <p>This link will expire in 1 hour.</p>
-                   <p>If you did not request this, please ignore this email.</p>
-                   <p>Best regards,<br/>Finantic Dashboard Team</p>`,
+            html: `
+            <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Password Reset Email Preview</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5;">
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f5f5f5;">
+        <tr>
+            <td style="padding: 40px 20px;">
+                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                    
+                    <!-- Header -->
+                    <tr>
+                        <td style="padding: 40px 40px 30px 40px; text-align: center; border-bottom: 1px solid #e5e5e5;">
+                            <h1 style="margin: 0 0 10px 0; font-size: 24px; font-weight: 600; color: #1a1a1a; letter-spacing: -0.3px;">
+                                Finantic Dashboard
+                            </h1>
+                            <p style="margin: 0; font-size: 14px; color: #666666;">
+                                Password Reset Request
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Main Content -->
+                    <tr>
+                        <td style="padding: 40px;">
+                            <h2 style="margin: 0 0 20px 0; font-size: 20px; font-weight: 600; color: #1a1a1a;">
+                                Hello ${user.name},
+                            </h2>
+                            
+                            <p style="margin: 0 0 20px 0; font-size: 15px; line-height: 1.6; color: #333333;">
+                                We received a request to reset the password for your Finantic Dashboard account.
+                            </p>
+                            
+                            <p style="margin: 0 0 30px 0; font-size: 15px; line-height: 1.6; color: #333333;">
+                                To reset your password, click the button below:
+                            </p>
+                            
+                            <!-- CTA Button -->
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                <tr>
+                                    <td style="text-align: center; padding: 0 0 30px 0;">
+                                        <a href="${resetLink}" style="display: inline-block; padding: 14px 40px; background-color: #2563eb; color: #ffffff; text-decoration: none; font-size: 15px; font-weight: 500; border-radius: 6px; letter-spacing: 0.2px;">
+                                            Reset Password
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <!-- Security Info Box -->
+                            <div style="margin: 0 0 25px 0; padding: 20px; background-color: #fff8e1; border-left: 3px solid #ffa726; border-radius: 4px;">
+                                <p style="margin: 0; font-size: 14px; line-height: 1.5; color: #555555;">
+                                    <strong style="color: #1a1a1a;">Security Notice:</strong><br>
+                                    This password reset link will expire in 1 hour for your security. If you did not request this password reset, please ignore this email and your password will remain unchanged.
+                                </p>
+                            </div>
+                            
+                            <!-- Alternative Link -->
+                            <p style="margin: 0 0 10px 0; font-size: 13px; color: #666666; line-height: 1.6;">
+                                If the button doesn't work, copy and paste this link into your browser:
+                            </p>
+                            <p style="margin: 0 0 25px 0; font-size: 13px; color: #2563eb; word-break: break-all; line-height: 1.6;">
+                                ${resetLink}
+                            </p>
+                            
+                            <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #666666;">
+                                If you need additional assistance, please contact our support team.
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td style="padding: 30px 40px; background-color: #fafafa; text-align: center; border-top: 1px solid #e5e5e5; border-radius: 0 0 8px 8px;">
+                            <p style="margin: 0 0 8px 0; font-size: 14px; color: #666666;">
+                                Best regards,
+                            </p>
+                            <p style="margin: 0 0 15px 0; font-size: 14px; font-weight: 500; color: #1a1a1a;">
+                                Finantic Dashboard Team
+                            </p>
+                            <p style="margin: 0; font-size: 12px; color: #999999;">
+                                © 2025 Finantic Dashboard. All rights reserved.
+                            </p>
+                        </td>
+                    </tr>
+                    
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+            `,
         });
 
         res.status(200).json({

@@ -14,9 +14,11 @@ const isUserInShare = (share, userId) => {
 export const addPayment = async (req, res) => {
     try {
         const { shareId } = req.params;
-        const { title, category, currency, amount, status } = req.body;
-        const imageUrl = req.file ? req.file.path : null;
-        const currentUser = req.user;
+        const { title, category, currency, amount, status, imageUrl } = req.body;
+
+        if (!title || !category || !amount || !status) {
+            return res.status(400).json({ message: "Missing required fields." });
+        }
 
         const share = await Share.findById(shareId);
         if (!share) {
@@ -24,14 +26,14 @@ export const addPayment = async (req, res) => {
         }
 
         if (!isUserInShare(share, req.user._id)) {
-            return res.status(403).json({ message: "Not authorized to add payments to this share." });
+            return res.status(403).json({ message: "Not authorized." });
         }
 
         const newPayment = await Payment.create({
             shareId,
             createdBy: req.user._id,
             title, category, currency, amount, status,
-            image: imageUrl,
+            image: imageUrl || null,
         });
 
         const populatedPayment = await Payment.findById(newPayment._id).populate("createdBy", "name _id");
@@ -79,7 +81,7 @@ export const addPayment = async (req, res) => {
 export const updatePayment = async (req, res) => {
     try {
         const { paymentId } = req.params;
-        const { title, category, currency, amount, status } = req.body;
+        const { title, category, currency, amount, status, imageUrl } = req.body;
         const currentUser = req.user;
 
         const payment = await Payment.findById(paymentId);
@@ -89,7 +91,7 @@ export const updatePayment = async (req, res) => {
 
         // Security check: Only the user who created the payment can edit it.
         if (payment.createdBy.toString() !== currentUser._id.toString()) {
-            return res.status(403).json({ message: "Not authorized to edit this payment." });
+            return res.status(403).json({ message: "Not authorized." });
         }
 
         payment.title = title || payment.title;
@@ -98,8 +100,8 @@ export const updatePayment = async (req, res) => {
         payment.amount = amount || payment.amount;
         payment.status = status || payment.status;
 
-        if (req.file) {
-            payment.image = req.file.path;
+        if (imageUrl !== undefined) {
+            payment.image = imageUrl;
         }
 
         const updatedPayment = await payment.save();
@@ -116,16 +118,42 @@ export const updatePayment = async (req, res) => {
 export const getPaymentsForShare = async (req, res) => {
     try {
         const { shareId } = req.params;
+
+        const { page = 1, limit = 10, sort = 'createdAt', order = 'desc', searchTerm = '' } = req.query;
+
         const share = await Share.findById(shareId);
         if (!share) return res.status(404).json({ message: "Share not found." });
 
         // Security: Ensure user is part of the share to view its payments
         if (!isUserInShare(share, req.user._id)) {
-            return res.status(403).json({ message: "Not authorized to view these payments." });
+            return res.status(403).json({ message: "Not authorized." });
         }
 
-        const payments = await Payment.find({ shareId }).populate("createdBy", "name _id").lean();
-        res.status(200).json({ payments });
+        const pageNum = parseInt(page, 10);
+        const limitNum = parseInt(limit, 10);
+        const skip = (pageNum - 1) * limitNum;
+
+        const query = { shareId };
+        if (searchTerm) {
+            const regex = new RegExp(searchTerm, 'i');
+            query.$or = [{ title: regex }, { category: regex }];
+        }
+
+        const totalPayments = await Payment.countDocuments(query);
+        const payments = await Payment.find(query)
+            .populate("createdBy", "name _id")
+            .sort({ [sort]: order === 'asc' ? 1 : -1 })
+            .skip(skip)
+            .limit(limitNum)
+            .lean();
+
+        res.status(200).json({
+            payments,
+            totalPayments,
+            currentPage: pageNum,
+            totalPages: Math.ceil(totalPayments / limitNum),
+        });
+        
     } catch (error) {
         res.status(500).json({ message: "Server error." });
     }
